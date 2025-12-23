@@ -26,18 +26,12 @@ namePrefix: staging-
 # Todo App (frontend)
 # Todo backend
 images:
-- name: arkb2023/broadcaster
-  newTag: cda89f6621519c95fa70afc7882cbeb084e48e48
 - name: arkb2023/broadcaster:latest
   newName: arkb2023/broadcaster
   newTag: 7d86f4a78bdf787896a2dfe2ebe3507c9ca012dd
-- name: arkb2023/todo-app
-  newTag: cda89f6621519c95fa70afc7882cbeb084e48e48
 - name: arkb2023/todo-app:latest
   newName: arkb2023/todo-app
   newTag: 7d86f4a78bdf787896a2dfe2ebe3507c9ca012dd
-- name: arkb2023/todo-backend
-  newTag: cda89f6621519c95fa70afc7882cbeb084e48e48
 - name: arkb2023/todo-backend:latest
   newName: arkb2023/todo-backend
   newTag: 7d86f4a78bdf787896a2dfe2ebe3507c9ca012dd

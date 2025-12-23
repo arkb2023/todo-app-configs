@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/arkb2023/devops-kubernetes
+    repoURL: https://github.com/arkb2023/todo-app-configs.git
     path: apps/the-project/overlays/prod
     targetRevision: HEAD
   destination:
