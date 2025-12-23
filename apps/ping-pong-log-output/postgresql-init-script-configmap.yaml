@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pg-init-script
+  namespace: exercises
+data:
+  init.sh: |
+    #!/bin/bash
+    set -e
+    echo "=== PostgreSQL Init Container Starting ==="
+    
+    # Wait for PostgreSQL to be ready (postgresql-db-svc)
+    echo "Waiting for PostgreSQL to accept connections..."
+    until PGPASSWORD="$POSTGRES_PASSWORD" pg_isready -h postgresql-db-svc -p 5432 -U "$POSTGRES_USER"; do
+      echo "PostgreSQL not ready yet - waiting (2s)..."
+      sleep 2
+    done
+    
+    echo "PostgreSQL ready - creating pingpong_counter table..."
+    PGPASSWORD="$POSTGRES_PASSWORD" psql -h postgresql-db-svc -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /scripts/init.sql
+    
+    echo "DB INITIALIZATION COMPLETE"
+  init.sql: |
+    -- Create pingpong_counter table (idempotent)
+    CREATE TABLE IF NOT EXISTS pingpong_counter (
+        id SERIAL PRIMARY KEY,
+        value INTEGER NOT NULL DEFAULT 0
+    );
+    
+    -- Initialize counter (idempotent)
+    INSERT INTO pingpong_counter (id, value) 
+    VALUES (1, 0) 
+    ON CONFLICT (id) DO NOTHING;
+    
+    -- Verify
+    SELECT 'Table ready!' as status, count(*) as rows FROM pingpong_counter;

@@ -1,0 +1,65 @@
+# PostgreSQL StatefulSet with ConfigMap Init Container
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: exercises
+  name: postgresql-db
+spec:
+  serviceName: postgresql-db-svc
+  replicas: 2
+  selector:
+    matchLabels:
+      app: postgresql-db
+  template:
+    metadata:
+      labels:
+        app: postgresql-db
+    spec:
+      containers:
+      - name: postgresql-db
+        image: postgres:latest
+        volumeMounts:
+        # Data persistence
+        - name: postgresql-db-disk
+          mountPath: /data
+        # # Native init scripts (runs automatically)
+        # - name: init-scripts
+        #   mountPath: /docker-entrypoint-initdb.d        
+        envFrom:
+        - configMapRef:
+            name: postgres-db-config
+        ports:
+        - containerPort: 5432
+          name: postgressql
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - testdbuser
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - testdbuser
+          initialDelaySeconds: 30
+          periodSeconds: 20
+      # Native init scripts volume
+      # Managed by container volumeMounts
+      # volumes:
+      # - name: init-scripts
+      #   configMap:
+      #     name: postgres-db-config  # Contains init.sql
+      #     defaultMode: 0644
+  volumeClaimTemplates:
+  - metadata:
+      name: postgresql-db-disk
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 100Mi
+  

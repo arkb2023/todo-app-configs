@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: pingpong-cpu-analysis
+  namespace: exercises
+spec:
+  args:
+  - name: namespace
+    value: exercises
+  metrics:
+  - name: cpu-usage
+    interval: 1m     # check every minute
+    count: 5         # run 5 times - ~5 minutes
+    # query returns millicores
+    # baseline: 20–40millicores 
+    # set threshold with headroom, say 200millicores
+    successCondition: result[0] < 200 
+    failureLimit: 1  # fail on first breach
+    provider:
+      prometheus:
+        # Use full service DNS across namespaces
+        #address: http://prometheus-kube-prometheus-stack-1765-prometheus.prometheus.svc:9090  
+        address:  http://kube-prometheus-stack-1765-prometheus.prometheus.svc.cluster.local:9090 # Prometheus service
+        query: |
+          sum(rate(container_cpu_usage_seconds_total{namespace="{{args.namespace}}"}[5m])) * 1000

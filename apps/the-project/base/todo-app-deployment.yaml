@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-app-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-app
+  template:
+    metadata:
+      labels:
+        app: todo-app
+    spec:
+      volumes:
+        - name: shared-image
+          persistentVolumeClaim:
+            claimName: local-pv-claim
+      containers:
+
+        # Main todo-app (Frontend) container
+        # ---------------------------------------------
+        - name: todo-app-container
+          #image: arkb2023/todo-app:3.5.1  # image name/tag
+          image: arkb2023/todo-app:latest  # Generic placeholder
+          env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace  # staging/production
+          envFrom:
+          - configMapRef:
+              name: todo-app-config
+          volumeMounts:
+          - name: shared-image
+            mountPath: /usr/src/app/files
+
+          # Health check probe
+          # -----------------------------------------------
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000  # FastAPI port
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          
+          # Resource requests and limits
+          # -----------------------------------------------
+          resources:
+            requests:
+              cpu: "250m"           # Minimum CPU needed
+              memory: "256Mi"       # Minimum memory needed
+            limits:
+              cpu: "500m"           # Maximum CPU allowed
+              memory: "512Mi"
+
+        # Sidecar container - Backend readiness probe (curl based!)
+        # ---------------------------------------------------------
+        - name: todo-backend-fetcher
+          image: arkb2023/todo-app:latest
+          command: ["/bin/sh"]                     # override ENTRYPOINT
+          args: ["-c", "tail -f /dev/null"]
+          volumeMounts:
+          - name: shared-image
+            mountPath: /usr/src/app/files
+          env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace            
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - curl -f http://${POD_NAMESPACE}-todo-backend-svc:4567/todos/healthz
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+
+        # Sidecar container - Backend readiness probe (httpGet based!)
+        # **didn't work!**
+        # Readiness probe failed: \
+        #   Get "http://todo-backend-svc:4567/todos/healthz": \
+        #   dial tcp: lookup todo-backend-svc: no such host
+        # DNS resolution problem!
+        # -------------------------------------------------------------
+        # - name: todo-backend-fetcher
+        #   image: busybox:1.36
+        #   command: ["sh", "-c", "sleep 365d"]
+        #   readinessProbe:
+        #     httpGet:
+        #       path: /todos/healthz
+        #       port: 4567
+        #       host: todo-backend-svc
+        #     initialDelaySeconds: 10
+        #     periodSeconds: 5
+        #     timeoutSeconds: 5           # fixme: keep higher
+        #     failureThreshold: 3
+
+          # Resource requests and limits
+          # -----------------------------------------------
+          resources:
+            requests:
+              cpu: "250m"           # Minimum CPU needed
+              memory: "256Mi"       # Minimum memory needed
+            limits:
+              cpu: "500m"           # Maximum CPU allowed
+              memory: "512Mi"

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: log-output-config
+  namespace: exercises
+data:
+  information.txt: |
+    this text is from file
+  MESSAGE: "hello world"
+  PINGPONG_APP_URL: "http://ping-pong-svc:3456/pings"

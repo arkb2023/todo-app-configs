@@ -1,0 +1,14 @@
+# PostgreSQL StatefulSet ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-db-config
+  labels:
+    app: postgresql-db
+data:
+  POSTGRES_USER: testdbuser
+  POSTGRES_DB: testdb
+  # Defined in apps/the-project/postgresql-dbsecret.yaml
+  # POSTGRES_PASSWORD: testdbuserpassword
+  PGDATA: /data/pgdata
+

@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: the-project-production
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/arkb2023/devops-kubernetes
+    path: apps/the-project/overlays/prod
+    targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true

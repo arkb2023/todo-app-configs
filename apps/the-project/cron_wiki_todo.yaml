@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: wiki-todo-generator
+  namespace: project
+spec:
+  schedule: "0 * * * *"  # Every hour
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: wiki-todo
+            image: arkb2023/wiki-todo-cron:2.9.3  # custom image
+            env:
+            - name: TODO_API_URL
+              # Generic Service Names for multi branch support
+              #value: "http://todo-backend-svc.project.svc.cluster.local:4567/todos/"
+              value: "http://todo-backend-svc:4567/todos/"
+          restartPolicy: OnFailure

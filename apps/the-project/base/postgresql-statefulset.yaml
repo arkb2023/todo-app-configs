@@ -1,0 +1,56 @@
+# PostgreSQL StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgresql-db
+spec:
+  serviceName: postgresql-db-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql-db
+  template:
+    metadata:
+      labels:
+        app: postgresql-db
+    spec:
+      containers:
+        - name: postgresql-db
+          image: postgres:latest
+          volumeMounts:
+            - name: postgresql-db-disk
+              mountPath: /data
+          envFrom:
+          - configMapRef:
+              name: postgres-db-config
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-db-secret
+                  key: POSTGRES_PASSWORD
+ 
+          # Resources: requests and limit
+          # -----------------------------
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+
+  # Volume Claim
+  # ------------
+  volumeClaimTemplates:
+    - metadata:
+        name: postgresql-db-disk
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        # local
+        # storageClassName: local-path
+        # GKE default
+        # storageClassName: standard-rwo
+        resources:
+          requests:
+            storage: 100Mi

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-db-config
+data:
+  POSTGRES_DB: "todos-staging"
+  #POSTGRES_USER: "postgres"
+  #POSTGRES_PASSWORD: "testdbuserpassword"
+  POSTGRES_INITDB_ARGS: "--encoding=UTF-8"

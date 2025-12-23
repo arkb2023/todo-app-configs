@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-backend-config
+  labels:
+    app: todo-backend
+data:
+
+  # POSTGRES_DB & POSTGRES_USER: 
+  #    defined in apps/the-project/postgresql-configmap.yaml
+  # ---------------------------------
+  # POSTGRES_DB: testdb
+  # POSTGRES_USER: testdbuser
+
+  # POSTGRES_PASSWORD:
+  #     Defined in apps/the-project/postgresql-dbsecret.yaml
+  # ----------------------------------------------------
+  # POSTGRES_PASSWORD: testdbuserpassword
+
+  # fix: multibranch - fqdn with namespace 'project' workaround
+  # DB_HOST: postgresql-db-svc.project.svc.cluster.local
+
+  DB_HOST: "postgresql-db-svc"
+  DB_PORT: "5432"
+  LOG_LEVEL: DEBUG
+  NATS_URL: "nats://nats.default.svc.cluster.local:4222"
+  

@@ -1,0 +1,76 @@
+# postgres-backup-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+spec:
+  #schedule: "0 2 * * *"  # Daily 2AM
+  schedule: "*/15 * * * *" # per 15min
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          initContainers:  # Root initContainer to setup dir
+          - name: setup-backup-dir
+            image: busybox:1.36
+            command: ["/bin/sh"]
+            args:
+            - -c
+            - |
+              mkdir -p /postgres-backups
+              chmod 777 /postgres-backups  # World-writable (safe for backups)
+              echo "Backup dir ready: $(ls -ld /postgres-backups)"
+            volumeMounts:
+            - name: postgres-data
+              mountPath: /postgres-backups
+          
+          containers:
+          - name: postgres-backup
+            image: postgres:18-alpine
+            securityContext:
+              runAsUser: 999  # postgres user
+              runAsGroup: 999            
+            command: ["/bin/sh"]
+            args:
+            - -c
+            - |
+              # Create backups dir in root of PVC
+              # mkdir -p /postgres-backups
+              # chmod 755 /postgres-backups
+              pg_dumpall --version  # show 18.x ?
+
+              # Backup ALL databases
+              pg_dumpall -h production-postgresql-db-svc -U testdbuser \
+                > /postgres-backups/backup-full-$(date +%Y%m%d-%H%M%S).sql
+              
+              # Cleanup old backups (>7 days)
+              find /postgres-backups -name "backup-full-*.sql" -mtime +7 -delete
+              
+              # Summary
+              echo "Backup completed:"
+              ls -lh /postgres-backups/backup-full-*.sql | tail -3
+              
+              echo "Total: $(du -sh /postgres-backups/)"
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  #name: postgres-db-secret
+                  name: production-postgres-db-secret
+                  key: POSTGRES_PASSWORD
+            - name: PGUSER
+              value: "testdbuser"                  
+            volumeMounts:
+            - name: postgres-data
+              mountPath: /postgres-backups  # Backups here!
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+          volumes:
+          - name: postgres-data
+            persistentVolumeClaim:
+              claimName: postgresql-db-disk-production-postgresql-db-0
+          restartPolicy: OnFailure

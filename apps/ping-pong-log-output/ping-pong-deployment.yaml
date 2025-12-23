@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: exercises
+  name: ping-pong-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ping-pong
+  template:
+    metadata:
+      labels:
+        app: ping-pong
+    spec:
+      containers:
+        - name: ping-pong
+          # image: arkb2023/ping-pong:4.1.5
+          image: arkb2023/ping-pong:latest # placeholder
+          envFrom:
+          - configMapRef:
+              name: postgres-db-config
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3

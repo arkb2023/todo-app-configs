@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgresql-db
+spec:
+  template:
+    spec:
+      containers:
+      - name: postgresql-db
+        volumeMounts:
+        - name: postgresql-db-disk
+          mountPath: /data
+        - name: init-script          # Postgres auto-runs this!
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: init-script
+        configMap:
+          name: staging-postgres-init-script
+  volumeClaimTemplates:
+  - metadata:
+      name: postgresql-db-disk
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: local-path
+      resources:
+        requests:
+          storage: 100Mi

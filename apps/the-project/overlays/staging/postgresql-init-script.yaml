@@ -1,0 +1,30 @@
+# apps/the-project/overlays/staging/postgres-init-script.yaml (FIXED)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: staging-postgres-init-script
+data:
+  init.sql: |
+    -- Switch to postgres DB first (CREATE DATABASE needs superuser context)
+    \c postgres;
+    
+    -- Create app database (drop if exists - idempotent)
+    DROP DATABASE IF EXISTS "todos-staging";
+    CREATE DATABASE "todos-staging";
+    
+    -- Connect to app database and create tables
+    \c "todos-staging";
+    CREATE TABLE IF NOT EXISTS public.todos (
+        id SERIAL PRIMARY KEY,
+        text VARCHAR(140) NOT NULL,
+        completed BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    -- Seed data
+    INSERT INTO public.todos (text, completed) 
+    VALUES ('Staging Todo App Ready!', false) 
+    ON CONFLICT (id) DO NOTHING;
+    
+    -- Verify
+    SELECT 'Schema ready!' as status, COUNT(*) as todos_count FROM todos;

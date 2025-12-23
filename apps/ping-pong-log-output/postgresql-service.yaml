@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: exercises
+  name: postgresql-db-svc
+  labels:
+    app: postgresql-db
+spec:
+  ports:
+  - port: 5432
+    name: postgressql
+  clusterIP: None
+  selector:
+    app: postgresql-db

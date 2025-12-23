@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-app-config
+data:
+  LOG_LEVEL: "DEBUG"
+  LOG_FORMAT: "ENV: %(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  # frontend only
+  TODO_BACKEND_API: "/todos/"
+  CACHE_DIR: "/usr/src/app/files/cache"
+  IMG_URL: "https://picsum.photos/300"
+
+  
+  
+  

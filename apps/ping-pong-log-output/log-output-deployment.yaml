@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: exercises
+  name: log-output-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-output
+  template:
+    metadata:
+      labels:
+        app: log-output
+    spec:
+      containers:
+        - name: log-reader
+          #image: arkb2023/log-reader:4.1.2
+          image: arkb2023/log-reader:latest # placeholder
+          env:
+            - name: MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: log-output-config
+                  key: MESSAGE
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config/
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+
+        - name: ping-pong-fetcher
+          image: arkb2023/log-reader:4.1.2
+          command: ["/bin/sh"]                     # override ENTRYPOINT
+          args: ["-c", "tail -f /dev/null"]        # idle loop; no uvicorn here
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config/
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - curl -f http://ping-pong-svc.exercises.svc.cluster.local:3456/pings
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+
+      volumes:
+        - name: config-volume
+          configMap:
+            name: log-output-config
+            items:
+              - key: information.txt
+                path: information.txt
+

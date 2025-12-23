@@ -1,0 +1,34 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: todo-ingressroute
+spec:
+  entryPoints:
+  - web
+  routes:
+  # Frontend route
+  - match: PathPrefix(`/staging`)
+    kind: Rule
+    services:
+    - name: staging-todo-app-svc
+      port: 1234
+    middlewares:
+    - name: staging-ingressroute-prefix-strip
+  # Backend route  
+  - match: PathPrefix(`/staging/todos`)
+    kind: Rule
+    services:
+    - name: staging-todo-backend-svc
+      port: 4567
+    middlewares:
+    - name: staging-ingressroute-prefix-strip
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: ingressroute-prefix-strip
+spec:
+  stripPrefix:
+    prefixes:
+    - /staging

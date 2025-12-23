@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  namespace: exercises
+  name: ping-pong-rollout
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ping-pong
+  template:
+    metadata:
+      labels:
+        app: ping-pong
+    spec:
+      containers:
+        - name: ping-pong
+          #image: arkb2023/ping-pong:4.4.5
+          image: arkb2023/ping-pong:latest # placeholder
+          envFrom:
+          - configMapRef:
+              name: postgres-db-config
+          env:
+          - name: ENABLE_CPU_STRESS
+            value: "false"          
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+  strategy:
+    canary:
+      steps:
+      - setWeight: 50
+      - pause: {duration: 60}   # optional pause for observation
+      - analysis:
+          templates:
+          - templateName: pingpong-cpu-analysis
+          args:
+          - name: namespace
+            value: exercises
