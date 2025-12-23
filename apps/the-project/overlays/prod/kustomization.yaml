@@ -24,10 +24,10 @@ namePrefix: production-
 images:
 - name: arkb2023/broadcaster:latest
   newName: arkb2023/broadcaster
-  newTag: v4.9.9
+  newTag: 7a06d73463c5c25078fd873a345daca5744eca6f
 - name: arkb2023/todo-app:latest
   newName: arkb2023/todo-app
-  newTag: v4.9.9
+  newTag: 7a06d73463c5c25078fd873a345daca5744eca6f
 - name: arkb2023/todo-backend:latest
   newName: arkb2023/todo-backend
-  newTag: v4.9.9
+  newTag: 7a06d73463c5c25078fd873a345daca5744eca6f
